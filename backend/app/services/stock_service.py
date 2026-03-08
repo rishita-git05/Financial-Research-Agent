@@ -18,3 +18,14 @@ def get_stock_price(symbol: str):
 
     except Exception as e:
         return {"error": str(e)}
+
+def get_historical_data(symbol: str):
+    try:
+        stock = yf.Ticker(symbol)
+
+        hist = stock.history(period="1mo")
+
+        return hist.reset_index().to_dict(orient="records")
+
+    except Exception as e:
+        return {"error": str(e)}
