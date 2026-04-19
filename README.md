@@ -1,134 +1,157 @@
 # 📊 Financial Research AI Agent
 
-A full-stack financial analysis application that helps users analyze Indian stocks using technical indicators, fundamentals, sentiment analysis, and AI-driven insights.
+A full-stack financial analysis platform that helps users analyze Indian stocks using technical indicators, fundamentals, sentiment analysis, and AI-powered insights.
 
 ---
 
 ## 🚀 Overview
 
-The Financial Research AI Agent combines financial analytics with AI-based reasoning to generate structured investment recommendations such as **Buy, Hold, or Sell**.
+The **Financial Research AI Agent** combines financial analytics with AI-based reasoning to generate structured stock recommendations such as:
 
-It integrates:
-- Technical analysis
-- Fundamental analysis
-- News sentiment
-- AI-based scoring system
-- Interactive dashboards
-- Portfolio tracking
+- ✅ BUY  
+- ⚖️ HOLD  
+- ❌ SELL  
+
+It integrates multiple systems into one intelligent dashboard:
+
+- Technical Analysis  
+- Fundamental Analysis  
+- News Sentiment  
+- AI-Based Scoring  
+- Interactive Visualizations  
+- Portfolio Tracking  
 
 ---
 
 ## 🎯 Features
 
 ### 📈 Stock Analysis
-- Real-time stock data using Yahoo Finance
+
+- Real-time stock data using **Yahoo Finance**
 - Technical indicators:
   - RSI (Relative Strength Index)
   - MACD
   - Moving Averages (MA20, MA50)
   - Bollinger Bands
-- Trend detection (Bullish / Bearish / Neutral)
+- Trend Detection:
+  - Bullish
+  - Bearish
+  - Neutral
 
 ---
 
 ### 🧠 AI-Based Decision System
-- Multi-factor scoring system
+
+- Multi-factor scoring engine
 - Generates:
-  - Final score
+  - Final Score
   - Recommendation (BUY / HOLD / SELL)
-- AI explanation for decisions
-- Gemini AI integration (with fallback handling)
+- AI-generated explanations
+- Gemini AI integration with fallback handling
 
 ---
 
 ### 📰 Sentiment Analysis
+
 - News-based sentiment classification
 - Positive / Neutral / Negative detection
 - Visual sentiment dashboard
 
 ---
 
-### 📊 Visualizations
-- Interactive price charts (Plotly)
-- Moving averages overlay
+### 📊 Interactive Visualizations
+
+- Live price charts using **Plotly**
+- Moving average overlays
 - Portfolio analytics:
-  - Pie chart (allocation)
-  - Bar chart (profit/loss)
+  - Allocation pie chart
+  - Profit/Loss chart
+  - Performance tracking
 
 ---
 
 ### 📂 Portfolio Management
-- Add/remove stocks
+
+- Add / Remove stocks
 - Track:
-  - Investment value
-  - Profit/Loss
-  - Overall return %
-- Portfolio recommendations
+  - Investment Value
+  - Profit / Loss
+  - Overall Return %
+- Portfolio suggestions
 
 ---
 
 ### ⭐ Watchlist
-- Add/remove stocks
-- Track selected stocks
+
+- Add / Remove favorite stocks
+- Track selected companies quickly
 
 ---
 
-### 📄 PDF Report
-- Download full stock analysis reports
-- Includes:
-  - Technical analysis
-  - Fundamentals
-  - Signals
-  - Final decision
+### 📄 PDF Report Generation
+
+Generate downloadable reports including:
+
+- Technical indicators
+- Fundamentals
+- Trading signals
+- Final recommendation
+- AI insights
 
 ---
 
 ### 🤖 Gemini AI Integration
-- Generates professional insights
-- Provides:
-  - Analysis
-  - Risk factors
-  - Investment outlook
-- Includes fallback when API limit is reached
+
+Uses **Google Gemini API** for:
+
+- Professional market insights
+- Risk analysis
+- Investment outlook
+- Smart summaries
+
+Includes fallback logic when API quota is reached.
 
 ---
 
 ## 🏗️ Tech Stack
 
 ### Backend
+
 - FastAPI
 - Python
 - SQLite
 - yfinance
 
 ### Frontend
+
 - Streamlit
 - Plotly
 - Pandas
 
 ### AI
+
 - Google Gemini API (`google-genai`)
-- Rule-based fallback logic
+- Rule-based fallback engine
 
 ---
 
 ## 📁 Project Structure
+
+```text
 Financial-Research-Agent/
-│
 ├── backend/
 │   ├── app/
-│   │   ├── agents/              # AI logic & decision system
-│   │   ├── routers/             # API endpoints
-│   │   ├── services/            # Business logic (stocks, analysis, etc.)
-│   │   ├── utils/               # Helper utilities
-│   │   ├── database.py          # Database setup
-│   │   └── main.py              # FastAPI entry point
-│   │
+│   │   ├── agents/
+│   │   ├── routers/
+│   │   ├── services/
+│   │   ├── utils/
+│   │   ├── database.py
+│   │   └── main.py
 │   └── requirements.txt
 │
 ├── frontend/
-│   └── streamlit_app.py         # Streamlit UI
+│   └── streamlit_app.py
 │
-├── .env                         # API keys (not committed)
+├── .env
 ├── .gitignore
 └── README.md
