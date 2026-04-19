@@ -272,11 +272,14 @@ elif menu == "Stock Analysis":
 
             st.subheader(f"Analysis Summary: {data.get('symbol', symbol)}")
 
-            col1, col2, col3, col4 = st.columns(4)
-            col1.metric("Price", data.get("price"))
-            col2.metric("Trend", data.get("trend"))
-            col3.metric("RSI", indicators.get("RSI"))
-            col4.metric("Sentiment", sentiment)
+            # Top metrics
+            top_metrics = st.columns(6)
+            top_metrics[0].metric("Price", data.get("price"))
+            top_metrics[1].metric("Trend", data.get("trend"))
+            top_metrics[2].metric("RSI", indicators.get("RSI"))
+            top_metrics[3].metric("Sentiment", sentiment)
+            top_metrics[4].metric("Final Score", data.get("final_score", "N/A"))
+            top_metrics[5].metric("Decision", data.get("final_decision", "N/A"))
 
             history = fetch_data(f"/stocks/{symbol}/history?period={period}")
             st.subheader("Interactive Stock Chart")
@@ -301,6 +304,14 @@ elif menu == "Stock Analysis":
 
             st.subheader("Generated Report")
             st.text_area("Analysis Report", report, height=350)
+
+            st.subheader("AI Insights (Gemini)")
+            ai_text = data.get("llm_analysis", "")
+
+            if "unavailable" in ai_text.lower():
+                st.warning(ai_text)
+            else:
+                st.success(ai_text)
 
             pdf_data = generate_pdf_report(data.get("symbol", symbol), report)
 
@@ -358,6 +369,8 @@ elif menu == "Stock Comparison":
                     "Trend": data.get("trend"),
                     "RSI": data.get("indicators", {}).get("RSI"),
                     "Sentiment": data.get("sentiment"),
+                    "Final Score": data.get("final_score"),
+                    "Decision": data.get("final_decision"),
                     "P/E": fundamentals.get("pe_ratio"),
                     "Market Cap": fundamentals.get("market_cap")
                 })
@@ -460,10 +473,34 @@ elif menu == "Portfolio":
         total_current = summary_result.get("total_current", 0)
         total_profit_loss = summary_result.get("total_profit_loss", 0)
 
-        col1, col2, col3 = st.columns(3)
+        col1, col2, col3, col4 = st.columns(4)
         col1.metric("Total Invested", total_invested)
         col2.metric("Total Current Value", total_current)
         col3.metric("Total Profit / Loss", total_profit_loss)
+        col4.metric("Overall Return %", summary_result.get("overall_return_percent", 0))
+
+        st.subheader("Portfolio Insights")
+
+        insight_col1, insight_col2, insight_col3 = st.columns(3)
+
+        best = summary_result.get("best_performer")
+        worst = summary_result.get("worst_performer")
+        diversification = summary_result.get("diversification_insight", "N/A")
+
+        with insight_col1:
+            if best:
+                st.metric("Best Performer", f"{best['symbol']} ({best['profit_loss']})")
+            else:
+                st.metric("Best Performer", "N/A")
+
+        with insight_col2:
+            if worst:
+                st.metric("Worst Performer", f"{worst['symbol']} ({worst['profit_loss']})")
+            else:
+                st.metric("Worst Performer", "N/A")
+
+        with insight_col3:
+            st.info(diversification)
 
         stocks_data = summary_result.get("stocks", [])
 
