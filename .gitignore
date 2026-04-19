@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+venv/
+venv310/
+backend/venv/
+backend/venv310/
+
+.env
+*.db
+backend/financial.db
+
+.DS_Store
+Thumbs.db
+.vscode/

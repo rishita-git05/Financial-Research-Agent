@@ -1,31 +1,75 @@
 import yfinance as yf
+from fastapi import HTTPException, status
+from app.database import cache_stock, get_cached_stock
+
 
 def get_stock_price(symbol: str):
+    symbol = symbol.upper().strip()
+
+    cached = get_cached_stock(symbol)
+    if cached:
+        return cached
+
     try:
         stock = yf.Ticker(symbol)
-        info = stock.info
+        info = stock.info or {}
 
-        if not info:
-            return {"error": "Invalid stock symbol"}
+        price = info.get("currentPrice")
 
-        return {
+        if price is None:
+            hist = stock.history(period="1d")
+            if hist.empty:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"No price data found for {symbol}"
+                )
+            price = float(hist["Close"].iloc[-1])
+
+        data = {
             "symbol": symbol,
-            "name": info.get("longName"),
-            "price": info.get("currentPrice"),
-            "market_cap": info.get("marketCap"),
-            "currency": info.get("currency")
+            "name": info.get("longName", symbol),
+            "price": float(price),
+            "market_cap": info.get("marketCap", "N/A"),
+            "currency": info.get("currency", "INR"),
+            "source": "yfinance"
         }
 
-    except Exception as e:
-        return {"error": str(e)}
+        cache_stock(symbol, data)
+        return data
 
-def get_historical_data(symbol: str):
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch stock price for {symbol}: {str(e)}"
+        )
+
+
+def get_historical_data(symbol: str, period: str = "1mo"):
+    symbol = symbol.upper().strip()
+
     try:
         stock = yf.Ticker(symbol)
+        hist = stock.history(period=period)
 
-        hist = stock.history(period="1mo")
+        if hist.empty:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No historical data found for {symbol}"
+            )
 
-        return hist.reset_index().to_dict(orient="records")
+        hist = hist.reset_index()
 
+        if "Date" in hist.columns:
+            hist["Date"] = hist["Date"].astype(str)
+
+        return hist.to_dict(orient="records")
+
+    except HTTPException:
+        raise
     except Exception as e:
-        return {"error": str(e)}
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch historical data for {symbol}: {str(e)}"
+        )
