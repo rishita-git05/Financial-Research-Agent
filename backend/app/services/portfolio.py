@@ -1,34 +1,55 @@
+from fastapi import HTTPException, status
+from app.database import (
+    add_portfolio_stock,
+    get_portfolio_stocks,
+    remove_portfolio_stock
+)
 from app.services.stock_service import get_stock_price
 from app.agents.financial_agent import analyze_stock
+from app.utils.validators import normalize_symbol, validate_quantity, validate_buy_price
 
-
-portfolio = []
 
 def add_stock(symbol, quantity, buy_price):
-    portfolio.append({
+    symbol = normalize_symbol(symbol)
+    quantity = validate_quantity(quantity)
+    buy_price = validate_buy_price(buy_price)
+
+    add_portfolio_stock(symbol, quantity, buy_price)
+
+    return {
+        "message": "Stock added to portfolio",
         "symbol": symbol,
         "quantity": quantity,
         "buy_price": buy_price
-    })
-    return {"message": "Stock added"}
+    }
+
 
 def get_portfolio():
-    return portfolio
+    return get_portfolio_stocks()
+
+
+def delete_stock(stock_id: int):
+    deleted = remove_portfolio_stock(stock_id)
+
+    if not deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No portfolio stock found with id {stock_id}"
+        )
+
+    return {"message": f"Portfolio stock with id {stock_id} removed successfully"}
 
 
 def get_portfolio_summary():
+    portfolio = get_portfolio_stocks()
+
     summary = []
     total_invested = 0
     total_current = 0
 
     for stock in portfolio:
         current_price_data = get_stock_price(stock["symbol"])
-
-        # handle dict or float
-        if isinstance(current_price_data, dict):
-            current_price = current_price_data.get("price", 0)
-        else:
-            current_price = current_price_data
+        current_price = current_price_data.get("price", 0)
 
         current_value = round(current_price * stock["quantity"], 2)
         invested_value = round(stock["buy_price"] * stock["quantity"], 2)
@@ -38,6 +59,7 @@ def get_portfolio_summary():
         total_current += current_value
 
         summary.append({
+            "id": stock["id"],
             "symbol": stock["symbol"],
             "quantity": stock["quantity"],
             "buy_price": stock["buy_price"],
@@ -54,45 +76,41 @@ def get_portfolio_summary():
         "total_profit_loss": round(total_current - total_invested, 2)
     }
 
+
 def get_recommendations():
+    portfolio = get_portfolio_stocks()
     recommendations = []
 
     for stock in portfolio:
-        try:
-            analysis = analyze_stock(stock["symbol"])
-            data = analysis["data"]
-        except Exception as e:
-            recommendations.append({
-                "symbol": stock["symbol"],
-                "decision": "ERROR",
-                "reason": str(e)
-            })
-            continue
+        analysis = analyze_stock(stock["symbol"])
+        data = analysis["data"]
 
-        rsi = data["indicators"].get("RSI", 50)
-        trend = data["trend"]
-        sentiment = data["sentiment"]
+        rsi = data["indicators"].get("RSI")
+        trend = data.get("trend", "Neutral")
+        sentiment = data.get("sentiment", "Neutral")
+        rsi_signal = data.get("rsi_signal", "Neutral")
 
-        # 🔥 Improved decision logic
-        if trend == "Bullish" and rsi < 60:
+        if rsi is None:
+            decision = "HOLD"
+            reason = f"Trend: {trend}, RSI unavailable, Sentiment: {sentiment}"
+        elif trend in ["Strong Bullish", "Bullish"] and rsi < 60 and sentiment != "Negative":
             decision = "BUY"
-        elif trend == "Bearish" and rsi > 40:
+            reason = f"Trend: {trend}, RSI: {rsi:.2f}, Sentiment: {sentiment}"
+        elif trend in ["Strong Bearish", "Bearish"] and rsi > 40:
             decision = "SELL"
+            reason = f"Trend: {trend}, RSI: {rsi:.2f}, Sentiment: {sentiment}"
         elif rsi < 30:
             decision = "STRONG BUY"
+            reason = f"RSI: {rsi:.2f} ({rsi_signal}), Trend: {trend}, Sentiment: {sentiment}"
         elif rsi > 70:
             decision = "STRONG SELL"
+            reason = f"RSI: {rsi:.2f} ({rsi_signal}), Trend: {trend}, Sentiment: {sentiment}"
         else:
             decision = "HOLD"
-
-        reason = f"Trend: {trend}, RSI: {rsi:.2f}, Sentiment: {sentiment}"
-
-        if rsi < 30:
-            reason += " (Oversold)"
-        elif rsi > 70:
-            reason += " (Overbought)"
+            reason = f"Trend: {trend}, RSI: {rsi:.2f}, Sentiment: {sentiment}"
 
         recommendations.append({
+            "id": stock["id"],
             "symbol": stock["symbol"],
             "decision": decision,
             "reason": reason
