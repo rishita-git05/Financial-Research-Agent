@@ -155,3 +155,10 @@ Financial-Research-Agent/
 ├── .env
 ├── .gitignore
 └── README.md
+
+```
+---
+## ⚠️ Disclaimer
+
+This project is built for educational purposes only.  
+It does not provide financial advice or investment recommendations.
